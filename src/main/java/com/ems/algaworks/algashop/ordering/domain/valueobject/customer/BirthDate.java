@@ -1,4 +1,4 @@
-package com.ems.algaworks.algashop.ordering.domain.valueobject;
+package com.ems.algaworks.algashop.ordering.domain.valueobject.customer;
 
 import java.time.LocalDate;
 import java.util.Objects;
