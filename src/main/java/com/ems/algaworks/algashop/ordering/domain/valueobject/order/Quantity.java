@@ -3,7 +3,7 @@ package com.ems.algaworks.algashop.ordering.domain.valueobject.order;
 import java.io.Serializable;
 import java.util.Objects;
 
-public record Quantity(Integer value)  implements Serializable, Comparable<Quantity.Quantity> {
+public record Quantity(Integer value)  implements Serializable, Comparable<Quantity> {
 
     public static final Quantity ZERO = new Quantity(0);
 
@@ -25,7 +25,7 @@ public record Quantity(Integer value)  implements Serializable, Comparable<Quant
     }
 
     @Override
-    public int compareTo(Quantity.Quantity o) {
+    public int compareTo(Quantity o) {
         return this.value.compareTo(o.value);
     }
 }
