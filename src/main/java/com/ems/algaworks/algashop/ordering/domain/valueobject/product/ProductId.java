@@ -1,17 +1,17 @@
-package com.ems.algaworks.algashop.ordering.domain.valueobject.customer;
+package com.ems.algaworks.algashop.ordering.domain.valueobject.product;
 
 import com.ems.algaworks.algashop.ordering.domain.utility.IdGenerator;
 
 import java.util.Objects;
 import java.util.UUID;
 
-public record CustomerId(UUID value) {
+public record ProductId(UUID value) {
 
-    public CustomerId {
+    public ProductId{
         Objects.requireNonNull(value);
     }
 
-    public CustomerId() {
+    public ProductId() {
         this(IdGenerator.generateTimeBasedUUID());
     }
 

@@ -3,30 +3,29 @@ package com.ems.algaworks.algashop.ordering.domain.valueobject.order;
 import java.io.Serializable;
 import java.util.Objects;
 
-public record Quantity(Integer value) {
-    public static record Quantity(Integer value) implements Serializable, Comparable<Quantity> {
-        public static final Quantity ZERO = new Quantity(0);
+public record Quantity(Integer value)  implements Serializable, Comparable<Quantity.Quantity> {
 
-        public Quantity {
-            Objects.requireNonNull(value);
-            if (value < 0) {
-                throw new IllegalArgumentException();
-            }
-        }
+    public static final Quantity ZERO = new Quantity(0);
 
-        public Quantity add(Quantity quantity) {
-            Objects.requireNonNull(quantity);
-            return new Quantity(this.value + quantity.value());
+    public Quantity {
+        Objects.requireNonNull(value);
+        if (value < 0) {
+            throw new IllegalArgumentException();
         }
+    }
 
-        @Override
-        public String toString() {
-            return String.valueOf(value);
-        }
+    public Quantity add(Quantity quantity) {
+        Objects.requireNonNull(quantity);
+        return new Quantity(this.value + quantity.value());
+    }
 
-        @Override
-        public int compareTo(Quantity o) {
-            return this.value.compareTo(o.value);
-        }
+    @Override
+    public String toString() {
+        return String.valueOf(value);
+    }
+
+    @Override
+    public int compareTo(Quantity.Quantity o) {
+        return this.value.compareTo(o.value);
     }
 }
