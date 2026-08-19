@@ -4,6 +4,7 @@ import com.ems.algaworks.algashop.ordering.domain.valueobject.order.Money;
 import com.ems.algaworks.algashop.ordering.domain.valueobject.order.OrderId;
 import com.ems.algaworks.algashop.ordering.domain.valueobject.order.OrderItemId;
 import com.ems.algaworks.algashop.ordering.domain.valueobject.order.Quantity;
+import com.ems.algaworks.algashop.ordering.domain.valueobject.product.Product;
 import com.ems.algaworks.algashop.ordering.domain.valueobject.product.ProductId;
 import com.ems.algaworks.algashop.ordering.domain.valueobject.product.ProductName;
 import lombok.Builder;
@@ -39,21 +40,25 @@ public class OrderItem {
 
     @Builder(builderClassName = "BrandNewOrderItemBuilder", builderMethodName = "brandNew")
     private static OrderItem createBrandNew(OrderId orderId,
-                                            ProductId productId, ProductName productName,
-                                            Money price, Quantity quantity) {
-        OrderItem newOrderItem = new OrderItem(
+                                            Product product,
+                                            Quantity quantity) {
+        Objects.requireNonNull(product);
+        Objects.requireNonNull(orderId);
+        Objects.requireNonNull(quantity);
+
+        OrderItem orderItem = new OrderItem(
                 new OrderItemId(),
                 orderId,
-                productId,
-                productName,
-                price,
+                product.id(),
+                product.name(),
+                product.price(),
                 quantity,
                 Money.ZERO
         );
 
-        newOrderItem.recalculateTotals();
+        orderItem.recalculateTotals();
 
-        return newOrderItem;
+        return orderItem;
     }
 
     void changeQuantity(Quantity quantity) {
