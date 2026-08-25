@@ -6,6 +6,8 @@ import com.ems.algaworks.algashop.ordering.domain.valueobject.product.ProductId;
 import com.ems.algaworks.algashop.ordering.domain.valueobject.product.ProductName;
 
 public class ProductTestDataBuilder {
+    public static final ProductId DEFAULT_PRODUCT_ID = new ProductId();
+
     private ProductTestDataBuilder() {
     }
 
