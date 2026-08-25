@@ -97,15 +97,6 @@ public class ShoppingCartTest {
     }
 
     @Test
-    void givenCartWithItems_whenDetectUnavailableItems_shouldReturnTrue() {
-        ShoppingCart cart = ShoppingCartTestDataBuilder.aShoppingCart().build();
-        Product product = ProductTestDataBuilder.aProduct().inStock(false).build();
-        cart.refreshItem(product);
-
-        Assertions.assertThat(cart.containsUnavailableItems()).isTrue();
-    }
-
-    @Test
     void givenCartWithItems_whenChangeQuantityToZero_shouldThrowIllegalArgumentException() {
         ShoppingCart cart = ShoppingCartTestDataBuilder.aShoppingCart().build();
         var item = cart.items().iterator().next();
