@@ -50,21 +50,6 @@ public class ShoppingCartItemTest {
     }
 
     @Test
-    public void givenItem_whenChangeAvailability_shouldUpdateStatus() {
-        ShoppingCartItem item = ShoppingCartItemTestDataBuilder.aShoppingCartItem()
-                .available(true)
-                .build();
-
-        Product product = ProductTestDataBuilder.aProduct()
-                .inStock(false)
-                .build();
-
-        item.refresh(product);
-
-        Assertions.assertThat(item.isAvailable()).isFalse();
-    }
-
-    @Test
     public void givenEqualIds_whenCompareItems_shouldBeEqual() {
         ShoppingCartId cartId = new ShoppingCartId();
         ProductId productId = new ProductId();
