@@ -1,15 +1,15 @@
 package com.ems.algaworks.algashop.ordering.domain.entity;
 
 import com.ems.algaworks.algashop.ordering.domain.exception.CustomerArchivedException;
-import com.ems.algaworks.algashop.ordering.domain.valueobject.Address;
-import com.ems.algaworks.algashop.ordering.domain.valueobject.BirthDate;
-import com.ems.algaworks.algashop.ordering.domain.valueobject.CustomerId;
-import com.ems.algaworks.algashop.ordering.domain.valueobject.Document;
-import com.ems.algaworks.algashop.ordering.domain.valueobject.Email;
-import com.ems.algaworks.algashop.ordering.domain.valueobject.FullName;
-import com.ems.algaworks.algashop.ordering.domain.valueobject.LoyaltyPoints;
-import com.ems.algaworks.algashop.ordering.domain.valueobject.Phone;
-import com.ems.algaworks.algashop.ordering.domain.valueobject.ZipCode;
+import com.ems.algaworks.algashop.ordering.domain.valueobject.customer.Address;
+import com.ems.algaworks.algashop.ordering.domain.valueobject.customer.BirthDate;
+import com.ems.algaworks.algashop.ordering.domain.valueobject.customer.CustomerId;
+import com.ems.algaworks.algashop.ordering.domain.valueobject.customer.Document;
+import com.ems.algaworks.algashop.ordering.domain.valueobject.customer.Email;
+import com.ems.algaworks.algashop.ordering.domain.valueobject.customer.FullName;
+import com.ems.algaworks.algashop.ordering.domain.valueobject.customer.LoyaltyPoints;
+import com.ems.algaworks.algashop.ordering.domain.valueobject.customer.Phone;
+import com.ems.algaworks.algashop.ordering.domain.valueobject.customer.ZipCode;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 

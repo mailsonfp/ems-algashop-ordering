@@ -1,4 +1,4 @@
-package com.ems.algaworks.algashop.ordering.domain.valueobject;
+package com.ems.algaworks.algashop.ordering.domain.valueobject.customer;
 
 import com.ems.algaworks.algashop.ordering.domain.validator.FieldValidations;
 import lombok.Builder;
