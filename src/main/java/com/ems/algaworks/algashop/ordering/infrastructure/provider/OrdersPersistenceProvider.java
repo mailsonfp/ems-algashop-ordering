@@ -3,6 +3,8 @@ package com.ems.algaworks.algashop.ordering.infrastructure.provider;
 import com.ems.algaworks.algashop.ordering.domain.model.entity.Order;
 import com.ems.algaworks.algashop.ordering.domain.model.repository.Orders;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.order.OrderId;
+import com.ems.algaworks.algashop.ordering.infrastructure.persistence.assembler.OrderPersistenceEntityAssembler;
+import com.ems.algaworks.algashop.ordering.infrastructure.persistence.disassembler.OrderPersistenceEntityDisassembler;
 import com.ems.algaworks.algashop.ordering.infrastructure.persistence.entity.OrderPersistenceEntity;
 import com.ems.algaworks.algashop.ordering.infrastructure.persistence.repository.OrderPersistenceEntityRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,10 +17,13 @@ import java.util.Optional;
 public class OrdersPersistenceProvider implements Orders {
 
     private final OrderPersistenceEntityRepository persistenceRepository;
+    private final OrderPersistenceEntityAssembler assembler;
+    private final OrderPersistenceEntityDisassembler disassembler;
 
     @Override
     public Optional<Order> ofId(OrderId orderId) {
-        return Optional.empty();
+        Optional<OrderPersistenceEntity> persistenceEntity = persistenceRepository.findById(orderId.value().toLong());
+        return persistenceEntity.map(disassembler::toDomainEntity);
     }
 
     @Override
@@ -28,10 +33,26 @@ public class OrdersPersistenceProvider implements Orders {
 
     @Override
     public void add(Order aggregateRoot) {
-        var persistenceEntity = OrderPersistenceEntity.builder()
-                .id(aggregateRoot.id().value().toLong())
-                .customerId(aggregateRoot.customerId().value())
-                .build();
+        long orderId = aggregateRoot.id().value().toLong();
+
+        persistenceRepository.findById(orderId)
+                .ifPresentOrElse(
+                        (persistenceEntity) -> {
+                            update(aggregateRoot, persistenceEntity);
+                        },
+                        ()-> {
+                            insert(aggregateRoot);
+                        }
+                );
+    }
+
+    private void update(Order aggregateRoot, OrderPersistenceEntity persistenceEntity) {
+        persistenceEntity = assembler.merge(persistenceEntity, aggregateRoot);
+        persistenceRepository.saveAndFlush(persistenceEntity);
+    }
+
+    private void insert(Order aggregateRoot) {
+        OrderPersistenceEntity persistenceEntity = assembler.fromDomain(aggregateRoot);
         persistenceRepository.saveAndFlush(persistenceEntity);
     }
 

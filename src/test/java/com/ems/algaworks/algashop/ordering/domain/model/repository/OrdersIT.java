@@ -1,18 +1,19 @@
 package com.ems.algaworks.algashop.ordering.domain.model.repository;
 
 import com.ems.algaworks.algashop.ordering.domain.model.entity.Order;
+import com.ems.algaworks.algashop.ordering.domain.model.entity.OrderStatus;
 import com.ems.algaworks.algashop.ordering.domain.model.entity.data.OrderTestDataBuilder;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.order.OrderId;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 @SpringBootTest
+@Transactional
 class OrdersIT {
     private Orders orders;
 
@@ -45,5 +46,21 @@ class OrdersIT {
                 s -> Assertions.assertThat(s.status()).isEqualTo(originalOrder.status()),
                 s -> Assertions.assertThat(s.paymentMethod()).isEqualTo(originalOrder.paymentMethod())
         );
+    }
+
+    @Test
+    public void shouldUpdateExistingOrder() {
+        Order order = OrderTestDataBuilder.anOrder().status(OrderStatus.PLACED).build();
+        orders.add(order);
+
+        order = orders.ofId(order.id()).orElseThrow();
+        order.markAsPaid();
+
+        orders.add(order);
+
+        order = orders.ofId(order.id()).orElseThrow();
+
+        Assertions.assertThat(order.isPaid()).isTrue();
+
     }
 }
