@@ -1,0 +1,66 @@
+package com.ems.algaworks.algashop.ordering.domain.model.repository;
+
+import com.ems.algaworks.algashop.ordering.domain.model.entity.Order;
+import com.ems.algaworks.algashop.ordering.domain.model.entity.OrderStatus;
+import com.ems.algaworks.algashop.ordering.domain.model.entity.data.OrderTestDataBuilder;
+import com.ems.algaworks.algashop.ordering.domain.model.valueobject.order.OrderId;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
+
+@SpringBootTest
+@Transactional
+class OrdersIT {
+    private Orders orders;
+
+    @Autowired
+    public OrdersIT(Orders orders) {
+        this.orders = orders;
+    }
+
+    @Test
+    public void shouldPersistAndFind() {
+        Order originalOrder = OrderTestDataBuilder.anOrder().build();
+        OrderId orderId = originalOrder.id();
+        orders.add(originalOrder);
+
+        Optional<Order> possibleOrder = orders.ofId(orderId);
+
+        Assertions.assertThat(possibleOrder).isPresent();
+
+        Order savedOrder = possibleOrder.get();
+
+        Assertions.assertThat(savedOrder).satisfies(
+                s -> Assertions.assertThat(s.id()).isEqualTo(orderId),
+                s -> Assertions.assertThat(s.customerId()).isEqualTo(originalOrder.customerId()),
+                s -> Assertions.assertThat(s.totalAmount()).isEqualTo(originalOrder.totalAmount()),
+                s -> Assertions.assertThat(s.totalItems()).isEqualTo(originalOrder.totalItems()),
+                s -> Assertions.assertThat(s.placedAt()).isEqualTo(originalOrder.placedAt()),
+                s -> Assertions.assertThat(s.paidAt()).isEqualTo(originalOrder.paidAt()),
+                s -> Assertions.assertThat(s.canceledAt()).isEqualTo(originalOrder.canceledAt()),
+                s -> Assertions.assertThat(s.readyAt()).isEqualTo(originalOrder.readyAt()),
+                s -> Assertions.assertThat(s.status()).isEqualTo(originalOrder.status()),
+                s -> Assertions.assertThat(s.paymentMethod()).isEqualTo(originalOrder.paymentMethod())
+        );
+    }
+
+    @Test
+    public void shouldUpdateExistingOrder() {
+        Order order = OrderTestDataBuilder.anOrder().status(OrderStatus.PLACED).build();
+        orders.add(order);
+
+        order = orders.ofId(order.id()).orElseThrow();
+        order.markAsPaid();
+
+        orders.add(order);
+
+        order = orders.ofId(order.id()).orElseThrow();
+
+        Assertions.assertThat(order.isPaid()).isTrue();
+
+    }
+}
