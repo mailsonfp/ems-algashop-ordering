@@ -43,6 +43,8 @@ public class Order implements AggregateRoot<OrderId> {
 
     private Set<OrderItem> items;
 
+    private Long version;
+
     @Builder(builderClassName = "ExistingOrderBuilder", builderMethodName = "existing")
     public Order(OrderId id, CustomerId customerId,
                  Money totalAmount, Quantity totalItems,
@@ -50,7 +52,7 @@ public class Order implements AggregateRoot<OrderId> {
                  OffsetDateTime canceledAt, OffsetDateTime readyAt,
                  Billing billing, Shipping shipping,
                  OrderStatus status, PaymentMethod paymentMethod,
-                 Set<OrderItem> items) {
+                 Set<OrderItem> items, Long version) {
         this.setId(id);
         this.setCustomerId(customerId);
         this.setTotalAmount(totalAmount);
@@ -64,6 +66,7 @@ public class Order implements AggregateRoot<OrderId> {
         this.setStatus(status);
         this.setPaymentMethod(paymentMethod);
         this.setItems(items);
+        this.setVersion(version);
     }
 
     public static Order draft(CustomerId customerId) {
@@ -80,7 +83,8 @@ public class Order implements AggregateRoot<OrderId> {
                 null,
                 OrderStatus.DRAFT,
                 null,
-                new HashSet<>()
+                new HashSet<>(),
+                null
         );
     }
 
@@ -242,6 +246,10 @@ public class Order implements AggregateRoot<OrderId> {
         return Collections.unmodifiableSet(items);
     }
 
+    public Long version() {
+        return version;
+    }
+
     private void recalculateTotals() {
         BigDecimal totalItensAmount = this.items().stream()
                 .map(item -> item.totalAmount().value())
@@ -356,6 +364,10 @@ public class Order implements AggregateRoot<OrderId> {
     private void setItems(Set<OrderItem> items) {
         Objects.requireNonNull(items);
         this.items = items;
+    }
+
+    private void setVersion(Long version) {
+        this.version = version;
     }
 
     @Override

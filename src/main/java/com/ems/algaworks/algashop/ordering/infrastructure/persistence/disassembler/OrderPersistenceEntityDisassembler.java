@@ -3,10 +3,22 @@ package com.ems.algaworks.algashop.ordering.infrastructure.persistence.disassemb
 import com.ems.algaworks.algashop.ordering.domain.model.entity.Order;
 import com.ems.algaworks.algashop.ordering.domain.model.entity.OrderStatus;
 import com.ems.algaworks.algashop.ordering.domain.model.entity.PaymentMethod;
+import com.ems.algaworks.algashop.ordering.domain.model.valueobject.customer.Address;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.customer.CustomerId;
+import com.ems.algaworks.algashop.ordering.domain.model.valueobject.customer.Document;
+import com.ems.algaworks.algashop.ordering.domain.model.valueobject.customer.FullName;
+import com.ems.algaworks.algashop.ordering.domain.model.valueobject.customer.Phone;
+import com.ems.algaworks.algashop.ordering.domain.model.valueobject.customer.ZipCode;
+import com.ems.algaworks.algashop.ordering.domain.model.valueobject.order.Billing;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.order.Money;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.order.OrderId;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.order.Quantity;
+import com.ems.algaworks.algashop.ordering.domain.model.valueobject.order.Recipient;
+import com.ems.algaworks.algashop.ordering.domain.model.valueobject.order.Shipping;
+import com.ems.algaworks.algashop.ordering.infrastructure.persistence.embeddable.AddressEmbeddable;
+import com.ems.algaworks.algashop.ordering.infrastructure.persistence.embeddable.BillingEmbeddable;
+import com.ems.algaworks.algashop.ordering.infrastructure.persistence.embeddable.RecipientEmbeddable;
+import com.ems.algaworks.algashop.ordering.infrastructure.persistence.embeddable.ShippingEmbeddable;
 import com.ems.algaworks.algashop.ordering.infrastructure.persistence.entity.OrderPersistenceEntity;
 import org.springframework.stereotype.Component;
 
@@ -28,6 +40,44 @@ public class OrderPersistenceEntityDisassembler {
                 .canceledAt(persistenceEntity.getCanceledAt())
                 .readyAt(persistenceEntity.getReadyAt())
                 .items(new HashSet<>())
+                .version(persistenceEntity.getVersion())
+                .build();
+    }
+
+    private Shipping toShippingValueObject(ShippingEmbeddable shippingEmbeddable) {
+        RecipientEmbeddable recipientEmbeddable = shippingEmbeddable.getRecipient();
+        return Shipping.builder()
+                .cost(new Money(shippingEmbeddable.getCost()))
+                .expectedDate(shippingEmbeddable.getExpectedDate())
+                .recipient(
+                        Recipient.builder()
+                                .fullName(new FullName(recipientEmbeddable.getFirstName(), recipientEmbeddable.getLastName()))
+                                .document(new Document(recipientEmbeddable.getDocument()))
+                                .phone(new Phone(recipientEmbeddable.getPhone()))
+                                .build()
+                )
+                .address(toAddressValueObject(shippingEmbeddable.getAddress()))
+                .build();
+    }
+
+    private Billing toBillingValueObject(BillingEmbeddable billingEmbeddable) {
+        return Billing.builder()
+                .fullName(new FullName(billingEmbeddable.getFirstName(), billingEmbeddable.getLastName()))
+                .document(new Document(billingEmbeddable.getDocument()))
+                .phone(new Phone(billingEmbeddable.getPhone()))
+                .address(toAddressValueObject(billingEmbeddable.getAddress()))
+                .build();
+    }
+
+    private Address toAddressValueObject(AddressEmbeddable address) {
+        return Address.builder()
+                .street(address.getStreet())
+                .number(address.getNumber())
+                .complement(address.getComplement())
+                .neighborhood(address.getNeighborhood())
+                .city(address.getCity())
+                .state(address.getState())
+                .zipCode(new ZipCode(address.getZipCode()))
                 .build();
     }
 
