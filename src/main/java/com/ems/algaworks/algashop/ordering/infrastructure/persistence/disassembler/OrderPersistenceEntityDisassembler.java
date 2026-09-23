@@ -1,28 +1,36 @@
 package com.ems.algaworks.algashop.ordering.infrastructure.persistence.disassembler;
 
 import com.ems.algaworks.algashop.ordering.domain.model.entity.Order;
+import com.ems.algaworks.algashop.ordering.domain.model.entity.OrderItem;
 import com.ems.algaworks.algashop.ordering.domain.model.entity.OrderStatus;
 import com.ems.algaworks.algashop.ordering.domain.model.entity.PaymentMethod;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.customer.Address;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.customer.CustomerId;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.customer.Document;
+import com.ems.algaworks.algashop.ordering.domain.model.valueobject.customer.Email;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.customer.FullName;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.customer.Phone;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.customer.ZipCode;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.order.Billing;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.order.Money;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.order.OrderId;
+import com.ems.algaworks.algashop.ordering.domain.model.valueobject.order.OrderItemId;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.order.Quantity;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.order.Recipient;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.order.Shipping;
+import com.ems.algaworks.algashop.ordering.domain.model.valueobject.product.ProductId;
+import com.ems.algaworks.algashop.ordering.domain.model.valueobject.product.ProductName;
 import com.ems.algaworks.algashop.ordering.infrastructure.persistence.embeddable.AddressEmbeddable;
 import com.ems.algaworks.algashop.ordering.infrastructure.persistence.embeddable.BillingEmbeddable;
 import com.ems.algaworks.algashop.ordering.infrastructure.persistence.embeddable.RecipientEmbeddable;
 import com.ems.algaworks.algashop.ordering.infrastructure.persistence.embeddable.ShippingEmbeddable;
+import com.ems.algaworks.algashop.ordering.infrastructure.persistence.entity.OrderItemPersistenceEntity;
 import com.ems.algaworks.algashop.ordering.infrastructure.persistence.entity.OrderPersistenceEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 public class OrderPersistenceEntityDisassembler {
@@ -41,6 +49,25 @@ public class OrderPersistenceEntityDisassembler {
                 .readyAt(persistenceEntity.getReadyAt())
                 .items(new HashSet<>())
                 .version(persistenceEntity.getVersion())
+                .billing(toBillingValueObject(persistenceEntity.getBilling()))
+                .shipping(toShippingValueObject(persistenceEntity.getShipping()))
+                .items(toDomainEntity(persistenceEntity.getItems()))
+                .build();
+    }
+
+    private Set<OrderItem> toDomainEntity(Set<OrderItemPersistenceEntity> items) {
+        return items.stream().map(this::toDomainEntity).collect(Collectors.toSet());
+    }
+
+    private OrderItem toDomainEntity(OrderItemPersistenceEntity persistenceEntity) {
+        return OrderItem.existing()
+                .id(new OrderItemId(persistenceEntity.getId()))
+                .orderId(new OrderId(persistenceEntity.getOrderId()))
+                .productId(new ProductId(persistenceEntity.getProductId()))
+                .productName(new ProductName(persistenceEntity.getProductName()))
+                .price(new Money(persistenceEntity.getPrice()))
+                .quantity(new Quantity(persistenceEntity.getQuantity()))
+                .totalAmount(new Money(persistenceEntity.getTotalAmount()))
                 .build();
     }
 
@@ -66,6 +93,7 @@ public class OrderPersistenceEntityDisassembler {
                 .document(new Document(billingEmbeddable.getDocument()))
                 .phone(new Phone(billingEmbeddable.getPhone()))
                 .address(toAddressValueObject(billingEmbeddable.getAddress()))
+                .email(new Email(billingEmbeddable.getEmail()))
                 .build();
     }
 

@@ -1,6 +1,7 @@
 package com.ems.algaworks.algashop.ordering.infrastructure.persistence.assembler;
 
 import com.ems.algaworks.algashop.ordering.domain.model.entity.Order;
+import com.ems.algaworks.algashop.ordering.domain.model.entity.OrderItem;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.customer.Address;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.order.Billing;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.order.Recipient;
@@ -9,8 +10,14 @@ import com.ems.algaworks.algashop.ordering.infrastructure.persistence.embeddable
 import com.ems.algaworks.algashop.ordering.infrastructure.persistence.embeddable.BillingEmbeddable;
 import com.ems.algaworks.algashop.ordering.infrastructure.persistence.embeddable.RecipientEmbeddable;
 import com.ems.algaworks.algashop.ordering.infrastructure.persistence.embeddable.ShippingEmbeddable;
+import com.ems.algaworks.algashop.ordering.infrastructure.persistence.entity.OrderItemPersistenceEntity;
 import com.ems.algaworks.algashop.ordering.infrastructure.persistence.entity.OrderPersistenceEntity;
 import org.springframework.stereotype.Component;
+
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 public class OrderPersistenceEntityAssembler {
@@ -33,6 +40,8 @@ public class OrderPersistenceEntityAssembler {
         orderPersistenceEntity.setVersion(order.version());
         orderPersistenceEntity.setBilling(toBillingEmbeddable(order.billing()));
         orderPersistenceEntity.setShipping(toShippingEmbeddable(order.shipping()));
+        Set<OrderItemPersistenceEntity> mergedItems = mergeItems(order, orderPersistenceEntity);
+        orderPersistenceEntity.replaceItems(mergedItems);
         return orderPersistenceEntity;
     }
 
@@ -45,8 +54,51 @@ public class OrderPersistenceEntityAssembler {
                 .lastName(billing.fullName().lastName())
                 .document(billing.document().value())
                 .phone(billing.phone().value())
+                .email(billing.email().value())
                 .address(toAddressEmbeddable(billing.address()))
                 .build();
+    }
+
+    private Set<OrderItemPersistenceEntity> mergeItems(Order order, OrderPersistenceEntity orderPersistenceEntity) {
+        Set<OrderItem> newOrUpdatedItems = order.items();
+
+        if (newOrUpdatedItems == null || newOrUpdatedItems.isEmpty()) {
+            return new HashSet<>();
+        }
+
+        Set<OrderItemPersistenceEntity> existingItems = orderPersistenceEntity.getItems();
+        if (existingItems == null || existingItems.isEmpty()) {
+            return newOrUpdatedItems.stream()
+                    .map(this::fromDomain)
+                    .collect(Collectors.toSet());
+        }
+
+        Map<Long, OrderItemPersistenceEntity> existingItemMap = existingItems.stream()
+                .collect(Collectors.toMap(OrderItemPersistenceEntity::getId, item -> item));
+
+        return newOrUpdatedItems.stream()
+                .map(orderItem -> {
+                    OrderItemPersistenceEntity itemPersistence = existingItemMap.getOrDefault(
+                            orderItem.id().value().toLong(), new OrderItemPersistenceEntity()
+                    );
+                    return merge(itemPersistence, orderItem);
+                })
+                .collect(Collectors.toSet());
+    }
+
+    public OrderItemPersistenceEntity fromDomain(OrderItem orderItem) {
+        return merge(new OrderItemPersistenceEntity(), orderItem);
+    }
+
+    private OrderItemPersistenceEntity merge(OrderItemPersistenceEntity orderItemPersistenceEntity,
+                                             OrderItem orderItem) {
+        orderItemPersistenceEntity.setId(orderItem.id().value().toLong());
+        orderItemPersistenceEntity.setProductId(orderItem.productId().value());
+        orderItemPersistenceEntity.setProductName(orderItem.productName().value());
+        orderItemPersistenceEntity.setPrice(orderItem.price().value());
+        orderItemPersistenceEntity.setQuantity(orderItem.quantity().value());
+        orderItemPersistenceEntity.setTotalAmount(orderItem.totalAmount().value());
+        return orderItemPersistenceEntity;
     }
 
     private AddressEmbeddable toAddressEmbeddable(Address address) {
