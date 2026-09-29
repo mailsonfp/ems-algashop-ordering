@@ -2,9 +2,11 @@ package com.ems.algaworks.algashop.ordering.domain.model.repository;
 
 import com.ems.algaworks.algashop.ordering.domain.model.entity.Order;
 import com.ems.algaworks.algashop.ordering.domain.model.entity.OrderStatus;
+import com.ems.algaworks.algashop.ordering.domain.model.entity.data.CustomerTestDataBuilder;
 import com.ems.algaworks.algashop.ordering.domain.model.entity.data.OrderTestDataBuilder;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.order.OrderId;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -13,14 +15,25 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
-@SpringBootTest
+@SpringBootTest(properties = "algashop.h2-console.enabled=false")
 @Transactional
 class OrdersIT {
     private Orders orders;
+    private Customers customers;
 
     @Autowired
-    public OrdersIT(Orders orders) {
+    public OrdersIT(Orders orders, Customers customers) {
         this.orders = orders;
+        this.customers = customers;
+    }
+
+    @BeforeEach
+    public void setup() {
+        if (!customers.exists(CustomerTestDataBuilder.DEFAULT_CUSTOMER_ID)) {
+            customers.add(
+                    CustomerTestDataBuilder.existingCustomer().build()
+            );
+        }
     }
 
     @Test

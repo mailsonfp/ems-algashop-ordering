@@ -1,4 +1,4 @@
-package com.ems.algaworks.algashop.ordering.infrastructure.provider;
+package com.ems.algaworks.algashop.ordering.infrastructure.persistence.provider;
 
 import com.ems.algaworks.algashop.ordering.domain.model.entity.Order;
 import com.ems.algaworks.algashop.ordering.domain.model.repository.Orders;

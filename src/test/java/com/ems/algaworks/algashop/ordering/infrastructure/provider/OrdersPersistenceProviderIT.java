@@ -2,20 +2,24 @@ package com.ems.algaworks.algashop.ordering.infrastructure.provider;
 
 import com.ems.algaworks.algashop.ordering.domain.model.entity.Order;
 import com.ems.algaworks.algashop.ordering.domain.model.entity.OrderStatus;
+import com.ems.algaworks.algashop.ordering.domain.model.entity.data.CustomerTestDataBuilder;
 import com.ems.algaworks.algashop.ordering.domain.model.entity.data.OrderTestDataBuilder;
-import com.ems.algaworks.algashop.ordering.infrastructure.config.SpringDataAuditConfig;
 import com.ems.algaworks.algashop.ordering.infrastructure.persistence.assembler.OrderPersistenceEntityAssembler;
+import com.ems.algaworks.algashop.ordering.infrastructure.persistence.config.SpringDataAuditConfig;
 import com.ems.algaworks.algashop.ordering.infrastructure.persistence.disassembler.OrderPersistenceEntityDisassembler;
+import com.ems.algaworks.algashop.ordering.infrastructure.persistence.provider.CustomersPersistenceProvider;
+import com.ems.algaworks.algashop.ordering.infrastructure.persistence.provider.OrdersPersistenceProvider;
 import com.ems.algaworks.algashop.ordering.infrastructure.persistence.repository.OrderPersistenceEntityRepository;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-@SpringBootTest
+@SpringBootTest(properties = "algashop.h2-console.enabled=false")
 @Import({
         OrdersPersistenceProvider.class,
         OrderPersistenceEntityAssembler.class,
@@ -25,13 +29,27 @@ import static org.junit.jupiter.api.Assertions.*;
 class OrdersPersistenceProviderIT {
 
     private OrdersPersistenceProvider persistenceProvider;
+    private CustomersPersistenceProvider customersPersistenceProvider;
     private OrderPersistenceEntityRepository entityRepository;
 
     @Autowired
-    public OrdersPersistenceProviderIT(OrdersPersistenceProvider persistenceProvider, OrderPersistenceEntityRepository entityRepository) {
+    public OrdersPersistenceProviderIT(OrdersPersistenceProvider persistenceProvider,
+                                       CustomersPersistenceProvider customersPersistenceProvider,
+                                       OrderPersistenceEntityRepository entityRepository) {
         this.persistenceProvider = persistenceProvider;
+        this.customersPersistenceProvider = customersPersistenceProvider;
         this.entityRepository = entityRepository;
     }
+
+    @BeforeEach
+    public void setup() {
+        if (!customersPersistenceProvider.exists(CustomerTestDataBuilder.DEFAULT_CUSTOMER_ID)) {
+            customersPersistenceProvider.add(
+                    CustomerTestDataBuilder.existingCustomer().build()
+            );
+        }
+    }
+
 
     @Test
     public void shouldUpdateAndKeepPersistenceEntityState() {
@@ -59,5 +77,16 @@ class OrdersPersistenceProviderIT {
         Assertions.assertThat(persistenceEntity.getLastModifiedAt()).isNotNull();
         Assertions.assertThat(persistenceEntity.getLastModifiedByUserId()).isNotNull();
 
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public void shouldAddFindAndNotFailWhenNoTransaction() {
+        Order order = OrderTestDataBuilder.anOrder().build();
+        persistenceProvider.add(order);
+
+        Assertions.assertThatNoException().isThrownBy(
+                ()-> persistenceProvider.ofId(order.id()).orElseThrow()
+        );
     }
 }

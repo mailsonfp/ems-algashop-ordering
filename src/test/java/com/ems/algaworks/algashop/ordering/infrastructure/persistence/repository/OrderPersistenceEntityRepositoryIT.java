@@ -1,30 +1,53 @@
 package com.ems.algaworks.algashop.ordering.infrastructure.persistence.repository;
 
-import com.ems.algaworks.algashop.ordering.infrastructure.config.SpringDataAuditConfig;
+import com.ems.algaworks.algashop.ordering.domain.model.entity.data.CustomerTestDataBuilder;
+import com.ems.algaworks.algashop.ordering.infrastructure.persistence.config.SpringDataAuditConfig;
+import com.ems.algaworks.algashop.ordering.infrastructure.persistence.entity.CustomerPersistenceEntity;
+import com.ems.algaworks.algashop.ordering.infrastructure.persistence.entity.CustomerPersistenceEntityTestDataBuilder;
 import com.ems.algaworks.algashop.ordering.infrastructure.persistence.entity.OrderPersistenceEntity;
 import com.ems.algaworks.algashop.ordering.infrastructure.persistence.entity.OrderPersistenceEntityTestDataBuilder;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
 
-@SpringBootTest
+import java.util.UUID;
+
+@SpringBootTest(properties = "algashop.h2-console.enabled=false")
 @Transactional
 @Import(SpringDataAuditConfig.class)
 class OrderPersistenceEntityRepositoryIT {
 
     private final OrderPersistenceEntityRepository orderPersistenceEntityRepository;
+    private final CustomerPersistenceEntityRepository customerPersistenceEntityRepository;
+
+    private CustomerPersistenceEntity customerPersistenceEntity;
 
     @Autowired
-    public OrderPersistenceEntityRepositoryIT(OrderPersistenceEntityRepository orderPersistenceEntityRepository) {
+    public OrderPersistenceEntityRepositoryIT(OrderPersistenceEntityRepository orderPersistenceEntityRepository,
+                                              CustomerPersistenceEntityRepository customerPersistenceEntityRepository) {
         this.orderPersistenceEntityRepository = orderPersistenceEntityRepository;
+        this.customerPersistenceEntityRepository = customerPersistenceEntityRepository;
+    }
+
+    @BeforeEach
+    public void setup() {
+        UUID customerId = CustomerTestDataBuilder.DEFAULT_CUSTOMER_ID.value();
+        if (!customerPersistenceEntityRepository.existsById(customerId)) {
+            customerPersistenceEntity = customerPersistenceEntityRepository.saveAndFlush(
+                    CustomerPersistenceEntityTestDataBuilder.aCustomer().build()
+            );
+        }
     }
 
     @Test
     public void shouldPersist() {
-        OrderPersistenceEntity entity = OrderPersistenceEntityTestDataBuilder.existingOrder().build();
+        OrderPersistenceEntity entity = OrderPersistenceEntityTestDataBuilder.existingOrder()
+                .customer(customerPersistenceEntity)
+                .build();
 
         orderPersistenceEntityRepository.saveAndFlush(entity);
         Assertions.assertThat(orderPersistenceEntityRepository.existsById(entity.getId())).isTrue();
@@ -42,7 +65,9 @@ class OrderPersistenceEntityRepositoryIT {
 
     @Test
     public void shouldSetAuditingValues() {
-        OrderPersistenceEntity entity = OrderPersistenceEntityTestDataBuilder.existingOrder().build();
+        OrderPersistenceEntity entity = OrderPersistenceEntityTestDataBuilder.existingOrder()
+                .customer(customerPersistenceEntity)
+                .build();
         entity = orderPersistenceEntityRepository.saveAndFlush(entity);
 
         Assertions.assertThat(entity.getCreatedByUserId()).isNotNull();
