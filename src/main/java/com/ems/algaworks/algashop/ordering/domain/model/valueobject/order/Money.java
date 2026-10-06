@@ -21,6 +21,10 @@ public record Money(BigDecimal value) implements Comparable<Money> {
         }
     }
 
+    public static Money of(BigDecimal total) {
+        return new Money(total);
+    }
+
     public Money multiply(Quantity quantity) {
         Objects.requireNonNull(quantity);
         if (quantity.value() < 1) {

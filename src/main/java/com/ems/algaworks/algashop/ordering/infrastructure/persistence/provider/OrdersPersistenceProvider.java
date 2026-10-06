@@ -2,6 +2,8 @@ package com.ems.algaworks.algashop.ordering.infrastructure.persistence.provider;
 
 import com.ems.algaworks.algashop.ordering.domain.model.entity.Order;
 import com.ems.algaworks.algashop.ordering.domain.model.repository.Orders;
+import com.ems.algaworks.algashop.ordering.domain.model.valueobject.customer.CustomerId;
+import com.ems.algaworks.algashop.ordering.domain.model.valueobject.order.Money;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.order.OrderId;
 import com.ems.algaworks.algashop.ordering.infrastructure.persistence.assembler.OrderPersistenceEntityAssembler;
 import com.ems.algaworks.algashop.ordering.infrastructure.persistence.disassembler.OrderPersistenceEntityDisassembler;
@@ -15,7 +17,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.time.Year;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -70,6 +77,31 @@ public class OrdersPersistenceProvider implements Orders {
     @Override
     public Long count() {
         return persistenceRepository.count();
+    }
+
+    @Override
+    public List<Order> placedByCustomerInYear(CustomerId customerId, Year year) {
+        List<OrderPersistenceEntity> persistenceEntities = persistenceRepository.findByCustomer_IdAndPlacedAtBetween(
+                customerId.value(),
+                year.atDay(1).atStartOfDay().atOffset(OffsetDateTime.now().getOffset()),
+                year.atMonth(12).atEndOfMonth().atTime(23, 59, 59).atOffset(OffsetDateTime.now().getOffset())
+        );
+
+        return persistenceEntities.stream()
+                .map(disassembler::toDomainEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public long salesQuantityByCustomerInYear(CustomerId customerId, Year year) {
+        return persistenceRepository.salesQuantityByCustomerInYear(customerId.value(), year.getValue());
+    }
+
+    @Override
+    public Money totalSalesSoldForCustomer(CustomerId customerId) {
+        BigDecimal total = persistenceRepository.totalSoldForCustomer(customerId.value());
+        return Money.of(total);
+
     }
 
     @SneakyThrows

@@ -60,4 +60,20 @@ class CustomersPersistenceProviderIT {
         Assertions.assertThat(persistenceEntity.getLastModifiedByUserId()).isNotNull();
         Assertions.assertThat(customer.version()).isEqualTo(persistenceEntity.getVersion());
     }
+
+    @Test
+    void shouldFindCustomerByEmail() {
+        Customer customer = CustomerTestDataBuilder.brandNewCustomer().build();
+        persistenceProvider.add(customer);
+
+        Assertions.assertThat(persistenceProvider.ofEmail(customer.email()))
+                .isPresent()
+                .contains(customer);
+    }
+
+    @Test
+    void shouldNotFindCustomerByEmailWhenEmailDoesNotExist() {
+        Assertions.assertThat(persistenceProvider.ofEmail(new Email("notfound@email.com")))
+                .isEmpty();
+    }
 }

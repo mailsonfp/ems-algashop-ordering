@@ -3,6 +3,7 @@ package com.ems.algaworks.algashop.ordering.infrastructure.persistence.provider;
 import com.ems.algaworks.algashop.ordering.domain.model.entity.Customer;
 import com.ems.algaworks.algashop.ordering.domain.model.repository.Customers;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.customer.CustomerId;
+import com.ems.algaworks.algashop.ordering.domain.model.valueobject.customer.Email;
 import com.ems.algaworks.algashop.ordering.infrastructure.persistence.assembler.CustomerPersistenceEntityAssembler;
 import com.ems.algaworks.algashop.ordering.infrastructure.persistence.disassembler.CustomerPersistenceEntityDisassembler;
 import com.ems.algaworks.algashop.ordering.infrastructure.persistence.entity.CustomerPersistenceEntity;
@@ -77,5 +78,19 @@ public class CustomersPersistenceProvider implements Customers {
     public Long count() {
         return persistenceRepository.count();
     }
+
+    @Override
+    public Optional<Customer> ofEmail(Email email) {
+        return persistenceRepository.findByEmail(email.value())
+                .map(disassembler::toDomainEntity);
+    }
+
+    @Override
+    public boolean isEmailUnique(Email email, CustomerId customerId) {
+        return persistenceRepository.findByEmail(email.value())
+                .map(existingCustomer -> existingCustomer.getId().equals(customerId.value()))
+                .orElse(true);
+    }
+
 
 }

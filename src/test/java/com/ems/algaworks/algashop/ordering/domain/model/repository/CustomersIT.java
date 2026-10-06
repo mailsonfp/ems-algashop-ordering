@@ -3,6 +3,7 @@ package com.ems.algaworks.algashop.ordering.domain.model.repository;
 import com.ems.algaworks.algashop.ordering.domain.model.entity.Customer;
 import com.ems.algaworks.algashop.ordering.domain.model.entity.data.CustomerTestDataBuilder;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.customer.CustomerId;
+import com.ems.algaworks.algashop.ordering.domain.model.valueobject.customer.Email;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.customer.FullName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -102,5 +103,25 @@ public class CustomersIT {
 
         assertThat(customers.exists(customer.id())).isTrue();
         assertThat(customers.exists(new CustomerId())).isFalse();
+    }
+
+    @Test
+    public void shouldFindByEmail() {
+        Customer customer = CustomerTestDataBuilder.brandNewCustomer().build();
+        customers.add(customer);
+
+        Optional<Customer> customerOptional = customers.ofEmail(customer.email());
+
+        assertThat(customerOptional).isPresent();
+    }
+
+    @Test
+    public void shouldReturnIfEmailIsInUse() {
+        Customer customer = CustomerTestDataBuilder.brandNewCustomer().build();
+        customers.add(customer);
+
+        assertThat(customers.isEmailUnique(customer.email(), customer.id())).isTrue();
+        assertThat(customers.isEmailUnique(customer.email(), new CustomerId())).isFalse();
+        assertThat(customers.isEmailUnique(new Email("alex@gmail.com"), new CustomerId())).isTrue();
     }
 }
