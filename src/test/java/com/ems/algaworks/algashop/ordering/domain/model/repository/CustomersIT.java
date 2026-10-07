@@ -1,0 +1,127 @@
+package com.ems.algaworks.algashop.ordering.domain.model.repository;
+
+import com.ems.algaworks.algashop.ordering.domain.model.entity.Customer;
+import com.ems.algaworks.algashop.ordering.domain.model.entity.data.CustomerTestDataBuilder;
+import com.ems.algaworks.algashop.ordering.domain.model.valueobject.customer.CustomerId;
+import com.ems.algaworks.algashop.ordering.domain.model.valueobject.customer.Email;
+import com.ems.algaworks.algashop.ordering.domain.model.valueobject.customer.FullName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+
+@SpringBootTest(properties = "algashop.h2-console.enabled=false")
+@Transactional
+public class CustomersIT {
+    private Customers customers;
+
+    @Autowired
+    public CustomersIT(Customers customers) {
+        this.customers = customers;
+    }
+
+    @Test
+    public void shouldPersistAndFind() {
+        Customer originalCustomer = CustomerTestDataBuilder.brandNewCustomer().build();
+        CustomerId customerId = originalCustomer.id();
+        customers.add(originalCustomer);
+
+        Optional<Customer> possibleCustomer = customers.ofId(customerId);
+
+        assertThat(possibleCustomer).isPresent();
+
+        Customer savedCustomer = possibleCustomer.get();
+
+        assertThat(savedCustomer).satisfies(
+                s -> assertThat(s.id()).isEqualTo(customerId)
+        );
+    }
+
+    @Test
+    public void shouldUpdateExistingCustomer() {
+        Customer customer = CustomerTestDataBuilder.brandNewCustomer().build();
+        customers.add(customer);
+
+        customer = customers.ofId(customer.id()).orElseThrow();
+        customer.archive();
+
+        customers.add(customer);
+
+        Customer savedCustomer = customers.ofId(customer.id()).orElseThrow();
+
+        assertThat(savedCustomer.archivedAt()).isNotNull();
+        assertThat(savedCustomer.isArchived()).isTrue();
+
+    }
+
+    @Test
+    public void shouldNotAllowStaleUpdates() {
+        Customer customer = CustomerTestDataBuilder.brandNewCustomer().build();
+        customers.add(customer);
+
+        Customer customerT1 = customers.ofId(customer.id()).orElseThrow();
+        Customer customerT2 = customers.ofId(customer.id()).orElseThrow();
+
+        customerT1.archive();
+        customers.add(customerT1);
+
+        customerT2.changeName(new FullName("Alex","Silva"));
+
+        assertThatExceptionOfType(ObjectOptimisticLockingFailureException.class)
+                .isThrownBy(()-> customers.add(customerT2));
+
+        Customer savedCustomer = customers.ofId(customer.id()).orElseThrow();
+
+        assertThat(savedCustomer.archivedAt()).isNotNull();
+        assertThat(savedCustomer.isArchived()).isTrue();
+
+    }
+
+    @Test
+    public void shouldCountExistingOrders() {
+        assertThat(customers.count()).isZero();
+
+        Customer customer1 = CustomerTestDataBuilder.brandNewCustomer().build();
+        customers.add(customer1);
+
+        Customer customer2 = CustomerTestDataBuilder.brandNewCustomer().build();
+        customers.add(customer2);
+
+        assertThat(customers.count()).isEqualTo(2L);
+    }
+
+    @Test
+    public void shouldReturnValidateIfOrderExists() {
+        Customer customer = CustomerTestDataBuilder.brandNewCustomer().build();
+        customers.add(customer);
+
+        assertThat(customers.exists(customer.id())).isTrue();
+        assertThat(customers.exists(new CustomerId())).isFalse();
+    }
+
+    @Test
+    public void shouldFindByEmail() {
+        Customer customer = CustomerTestDataBuilder.brandNewCustomer().build();
+        customers.add(customer);
+
+        Optional<Customer> customerOptional = customers.ofEmail(customer.email());
+
+        assertThat(customerOptional).isPresent();
+    }
+
+    @Test
+    public void shouldReturnIfEmailIsInUse() {
+        Customer customer = CustomerTestDataBuilder.brandNewCustomer().build();
+        customers.add(customer);
+
+        assertThat(customers.isEmailUnique(customer.email(), customer.id())).isTrue();
+        assertThat(customers.isEmailUnique(customer.email(), new CustomerId())).isFalse();
+        assertThat(customers.isEmailUnique(new Email("alex@gmail.com"), new CustomerId())).isTrue();
+    }
+}

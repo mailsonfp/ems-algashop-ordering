@@ -17,7 +17,7 @@ import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
-public class Customer {
+public class Customer implements AggregateRoot<CustomerId> {
     private CustomerId id;
     private FullName fullName;
     private BirthDate birthDate;
@@ -30,6 +30,7 @@ public class Customer {
     private OffsetDateTime archivedAt;
     private LoyaltyPoints loyaltyPoints;
     private Address address;
+    private Long version;
 
     @Builder(builderClassName = "BrandNewCustomerBuild", builderMethodName = "brandNew")
     private static Customer createBrandNew(FullName fullName, BirthDate birthDate, Email email,
@@ -46,14 +47,15 @@ public class Customer {
                 OffsetDateTime.now(),
                 null,
                 LoyaltyPoints.ZERO,
-                address);
+                address,
+                null);
     }
 
     @Builder(builderClassName = "ExistingCustomerBuild", builderMethodName = "existing")
         public Customer(CustomerId id, FullName fullName, BirthDate birthDate, Email email, Phone phone,
                     Document document, Boolean promotionNotificationsAllowed, Boolean archived,
                     OffsetDateTime registeredAt, OffsetDateTime archivedAt, LoyaltyPoints loyaltyPoints,
-                    Address address) {
+                    Address address, Long version) {
         this.setId(id);
         this.setFullName(fullName);
         this.setBirthDate(birthDate);
@@ -66,6 +68,7 @@ public class Customer {
         this.setArchivedAt(archivedAt);
         this.setLoyaltyPoints(loyaltyPoints);
         this.setAddress(address);
+        this.setVersion(version);
     }
 
     public void addLoyaltyPoints(LoyaltyPoints loyaltyPointsAdded) {
@@ -164,6 +167,10 @@ public class Customer {
         return address;
     }
 
+    public Long version() {
+        return version;
+    }
+
     private void setId(CustomerId id) {
         Objects.requireNonNull(id);
         this.id = id;
@@ -220,6 +227,10 @@ public class Customer {
     private void setAddress(Address address) {
         Objects.requireNonNull(address);
         this.address = address;
+    }
+
+    private void setVersion(Long version) {
+        this.version = version;
     }
 
     private void verifyIfChangeable() {
