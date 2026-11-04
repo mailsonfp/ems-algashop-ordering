@@ -250,6 +250,10 @@ public class Order implements AggregateRoot<OrderId> {
         return version;
     }
 
+    public boolean isReady() {
+        return OrderStatus.READY.equals(this.status());
+    }
+
     private void recalculateTotals() {
         BigDecimal totalItensAmount = this.items().stream()
                 .map(item -> item.totalAmount().value())
