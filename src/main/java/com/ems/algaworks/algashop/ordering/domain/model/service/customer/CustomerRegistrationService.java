@@ -3,6 +3,7 @@ package com.ems.algaworks.algashop.ordering.domain.model.service.customer;
 import com.ems.algaworks.algashop.ordering.domain.model.entity.Customer;
 import com.ems.algaworks.algashop.ordering.domain.model.exception.CustomerEmailIsInUseException;
 import com.ems.algaworks.algashop.ordering.domain.model.repository.Customers;
+import com.ems.algaworks.algashop.ordering.domain.model.utility.DomainService;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.customer.Address;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.customer.BirthDate;
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.customer.CustomerId;
@@ -12,6 +13,7 @@ import com.ems.algaworks.algashop.ordering.domain.model.valueobject.customer.Ful
 import com.ems.algaworks.algashop.ordering.domain.model.valueobject.customer.Phone;
 import lombok.RequiredArgsConstructor;
 
+@DomainService
 @RequiredArgsConstructor
 public class CustomerRegistrationService {
     private final Customers customers;
